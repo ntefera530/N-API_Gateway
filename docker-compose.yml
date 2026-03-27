@@ -1,0 +1,57 @@
+services:
+
+  # ── API Gateway ───────────────────────────────────────────────────────────
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"        # Only port exposed to your machine — backends are internal only
+    volumes:
+      - ./src/main/resources/routes.properties:/etc/gateway/routes.properties:ro
+    environment:
+      GATEWAY_RATE_LIMIT: "${GATEWAY_RATE_LIMIT:-100}"   # override with: GATEWAY_RATE_LIMIT=5 ./dev.sh start
+    depends_on:
+      - users-service
+      - orders-service
+      - default-service
+    networks:
+      - gateway-net
+
+  # ── Mock Backends (Java) ──────────────────────────────────────────────────
+  # All built from the same mock-backend image; configured via environment variables.
+  # Not exposed externally — traffic must go through the gateway.
+
+  users-service:
+    build:
+      context: ./mock-backend
+      dockerfile: Dockerfile
+    environment:
+      SERVICE_NAME: users-service
+      SERVICE_PORT: "9001"
+    networks:
+      - gateway-net
+
+  orders-service:
+    build:
+      context: ./mock-backend
+      dockerfile: Dockerfile
+    environment:
+      SERVICE_NAME: orders-service
+      SERVICE_PORT: "9002"
+    networks:
+      - gateway-net
+
+  default-service:
+    build:
+      context: ./mock-backend
+      dockerfile: Dockerfile
+    environment:
+      SERVICE_NAME: default-service
+      SERVICE_PORT: "9003"
+    networks:
+      - gateway-net
+
+networks:
+  gateway-net:
+    driver: bridge

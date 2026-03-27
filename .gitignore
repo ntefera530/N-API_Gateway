@@ -1,0 +1,14 @@
+# Build output
+target/
+
+# IDE files
+.idea/
+*.iml
+.eclipse/
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+Thumbs.db
